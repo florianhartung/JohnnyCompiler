@@ -1,0 +1,7 @@
+y = 3
+z = 0
+if y < 5
+z = 1
+endif
+print z
+exit
