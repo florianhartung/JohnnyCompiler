@@ -23,7 +23,6 @@ public class IfStart implements Statement {
 
     @Override
     public JohnnyInstruction[] compile() {
-        System.out.println(1253);
         String[] splitCondition = condition.split(" ?(<|>|<=|>=|==) ?");
         String operation = condition.replaceAll("[\\w\\d ]", "");
 
