@@ -5,6 +5,13 @@ import jcompiler.compiler.JohnnyInstruction;
 import jcompiler.compiler.Statement;
 import jcompiler.compiler.standard.IfState;
 import jcompiler.compiler.standard.johnnyinstructions.*;
+import jcompiler.compiler.standard.statements.expressions.ConditionalExpression;
+import jcompiler.compiler.standard.statements.expressions.NumericExpression;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class IfStart implements Statement {
 
@@ -15,6 +22,13 @@ public class IfStart implements Statement {
     //y>x bad 2 jmps
     //y<x good 1 jump
 
+    //go 2 => true
+    //y >= x    x - y -> one jump
+    //x >= y    y - x -> one jump
+    //x < y     x - y -> two jumps
+    //y < x     y - x -> two jumps
+    //y == x    x - y AND y - x both one jump
+
     private final String condition;
 
     public IfStart(String condition) {//y>x means y sub x then non null, one step (bad)
@@ -23,33 +37,10 @@ public class IfStart implements Statement {
 
     @Override
     public JohnnyInstruction[] compile() {
-        String[] splitCondition = condition.split(" ?(<|>|<=|>=|==) ?");
         String operation = condition.replaceAll("[\\w\\d ]", "");
 
-        if (!Memory.variableExists(splitCondition[0])) {
-            Memory.addVariable(splitCondition[0], 0);
-        }
         IfState.startIfStructure(operation);
-        switch (operation) {
-            case ">":
-                return new JohnnyInstruction[]{new Take(Memory.resolveId(splitCondition[0])), new Sub(Memory.addVariable(Integer.parseInt(splitCondition[1]))), new Save(Memory.tmpVariable()), new Test(Memory.tmpVariable()), new Jump(-1), new Jump(-1)};
-            case "<":
-                return new JohnnyInstruction[]{new Take(Memory.addVariable(Integer.parseInt(splitCondition[1]))), new Sub(Memory.resolveId(splitCondition[0])), new Save(Memory.tmpVariable()), new Test(Memory.tmpVariable()), new Jump(-1), new Jump(-1)};
-            case "<=":
-                //operation = IfState.Operation.LTEQ;
-                break;
-            case ">=":
-                //operation = IfState.Operation.GTEQ;
-                break;
-            case "==":
-                //operation = IfState.Operation.EQ;
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid condition: " + condition);
-        }
-        System.out.println(1233);
 
-
-        return new JohnnyInstruction[0];
+        return new ConditionalExpression(condition).compile();
     }
 }

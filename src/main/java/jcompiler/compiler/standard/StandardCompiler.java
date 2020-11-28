@@ -42,18 +42,26 @@ public class StandardCompiler extends Compiler {
         for (Statement statement : statements) {
             if (statement instanceof IfEnd) {
                 int found = 0;
-                IfState.Operation operation = IfState.endIfStructure();
+                int elseAddress = -1;
+                IfState.IfConstruct ifConstruct = IfState.endIfStructure();
+                IfState.Operation operation = ifConstruct.getOperation();
                 for (int j = johnnyInstructions.size() - 1; ; j--) {
+
                     if (johnnyInstructions.get(j) instanceof Jump && ((Jump) johnnyInstructions.get(j)).getJumpToAdr() == -1) {
+                        if (ifConstruct.hasElse() && elseAddress == -1) {
+                            ((Jump) johnnyInstructions.get(j)).setJumpToAdr(johnnyInstructions.size() + 1);
+                            elseAddress = j + 1;
+                            continue;
+                        }
                         if (found == 1) {
                             if (operation == IfState.Operation.GT || operation == IfState.Operation.LT) {
                                 ((Jump) johnnyInstructions.get(j)).setJumpToAdr(j + 2);
                             } else {
-                                ((Jump) johnnyInstructions.get(j)).setJumpToAdr(j + 5);
+                                ((Jump) johnnyInstructions.get(j)).setJumpToAdr(ifConstruct.hasElse() ? elseAddress : johnnyInstructions.size() + 1);
                             }
                             break;
                         }
-                        ((Jump) johnnyInstructions.get(j)).setJumpToAdr(johnnyInstructions.size() + 1);
+                        ((Jump) johnnyInstructions.get(j)).setJumpToAdr(ifConstruct.hasElse() ? elseAddress : johnnyInstructions.size() + 1);
 
                         if (operation == IfState.Operation.GT || operation == IfState.Operation.LT) {
                             found = 1;
@@ -97,6 +105,8 @@ public class StandardCompiler extends Compiler {
             statements.add(new IfStart(statement.substring(3)));
         } else if (statement.equalsIgnoreCase("endif")) {
             statements.add(new IfEnd());
+        } else if (statement.equalsIgnoreCase("else")) {
+            statements.add(new IfElse());
         } else {
             throw new IllegalArgumentException("Syntax Error at " + statement);
         }

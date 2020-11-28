@@ -24,7 +24,7 @@ public class VariableAssignment implements Statement {
 
     public JohnnyInstruction[] compile() {
         String[] splitValues = value.split("([+\\- ])+");
-        if (splitValues.length == 1) {
+        if (splitValues.length == 1 && !Memory.variableExists(id)) {
             if (splitValues[0].matches("[0-9]+")) {
                 Memory.addVariable(id, Integer.parseInt(splitValues[0]));
                 return new JohnnyInstruction[0];
@@ -36,7 +36,7 @@ public class VariableAssignment implements Statement {
             } else {
                 throw new IllegalArgumentException("Invalid syntax: " + id + " = " + value);
             }
-        } else if (splitValues.length >= 2) {
+        } else if (splitValues.length > 0) {
             if (!Memory.variableExists(id)) {
                 Memory.addVariable(id, 0);
             }

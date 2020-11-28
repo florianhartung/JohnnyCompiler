@@ -1,19 +1,13 @@
 package jcompiler.compiler.standard;
 
-import jcompiler.compiler.JohnnyInstruction;
-import jcompiler.compiler.standard.statements.IfStart;
-
-import java.util.List;
 import java.util.Stack;
 
 public class IfState {
-    private static int inIfStructure = 0;
-    private static Stack<Operation> operationStack = new Stack<>();
+    private static Stack<IfConstruct> ifConstructs = new Stack<>();
 
 
     public static void startIfStructure(String condition) {
         Operation operation;
-        System.out.println(13);
         switch (condition) {
             case ">":
                 operation = Operation.GT;
@@ -33,14 +27,37 @@ public class IfState {
             default:
                 throw new IllegalArgumentException("Invalid condition!");
         }
-        System.out.println(123);
-        operationStack.push(operation);
-        inIfStructure++;
+        ifConstructs.push(new IfConstruct(operation, false));
     }
 
-    public static Operation endIfStructure() {
-        inIfStructure--;
-        return operationStack.pop();
+    public static void addElse() {
+        ifConstructs.peek().addElse();
+    }
+
+    public static IfConstruct endIfStructure() {
+        return ifConstructs.pop();
+    }
+
+    static class IfConstruct {
+        private final Operation operation;
+        private boolean hasElse;
+
+        public IfConstruct(Operation operation, boolean hasElse) {
+            this.operation = operation;
+            this.hasElse = hasElse;
+        }
+
+        public void addElse() {
+            hasElse = true;
+        }
+
+        public Operation getOperation() {
+            return operation;
+        }
+
+        public boolean hasElse() {
+            return hasElse;
+        }
     }
 
     enum Operation {
