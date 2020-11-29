@@ -1,8 +1,10 @@
 package jcompiler.compiler.standard;
 
+import jcompiler.Memory;
+
 import java.util.Stack;
 
-public class IfState {
+public class ConstructStates {
     private static Stack<IfConstruct> ifConstructs = new Stack<>();
 
 
@@ -27,7 +29,7 @@ public class IfState {
             default:
                 throw new IllegalArgumentException("Invalid condition!");
         }
-        ifConstructs.push(new IfConstruct(operation, false));
+        ifConstructs.push(new IfConstruct(operation, false, -1));
     }
 
     public static void addElse() {
@@ -38,17 +40,29 @@ public class IfState {
         return ifConstructs.pop();
     }
 
-    static class IfConstruct {
+    public static void startWhileLoop(int startOfWhileLoop) {
+        ifConstructs.peek().bindWithWhileLoop(startOfWhileLoop);
+    }
+
+    public static class IfConstruct {
         private final Operation operation;
         private boolean hasElse;
+        private int startOfWhileLoop;
 
-        public IfConstruct(Operation operation, boolean hasElse) {
+        public IfConstruct(Operation operation, boolean hasElse, int startOfWhileLoop) {
             this.operation = operation;
             this.hasElse = hasElse;
+            this.startOfWhileLoop = startOfWhileLoop;
         }
 
         public void addElse() {
             hasElse = true;
+            startOfWhileLoop = -1;
+        }
+
+        public void bindWithWhileLoop(int startOfWhileLoop){
+            this.startOfWhileLoop = startOfWhileLoop;
+            hasElse = false;
         }
 
         public Operation getOperation() {
@@ -58,9 +72,13 @@ public class IfState {
         public boolean hasElse() {
             return hasElse;
         }
+
+        public int getStartOfWhileLoop() {
+            return startOfWhileLoop;
+        }
     }
 
-    enum Operation {
+    public enum Operation {
         GT,LT,EQ,GTEQ,LTEQ
     }
 }

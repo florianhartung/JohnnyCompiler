@@ -21,6 +21,6 @@ public class Read extends JohnnyInstruction implements DataAccessor {
 
     @Override
     public void shiftAddress(int shiftAmount) {
-        valueSaveAdr += valueSaveAdr;
+        valueSaveAdr += shiftAmount;
     }
 }

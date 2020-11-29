@@ -21,6 +21,6 @@ public class Out extends JohnnyInstruction implements DataAccessor {
 
     @Override
     public void shiftAddress(int shiftAmount) {
-        valueOutputAdr += valueOutputAdr;
+        valueOutputAdr += shiftAmount;
     }
 }

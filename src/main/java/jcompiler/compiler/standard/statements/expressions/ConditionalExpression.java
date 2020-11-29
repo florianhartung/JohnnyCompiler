@@ -3,7 +3,6 @@ package jcompiler.compiler.standard.statements.expressions;
 import jcompiler.Memory;
 import jcompiler.compiler.JohnnyInstruction;
 import jcompiler.compiler.Statement;
-import jcompiler.compiler.standard.IfState;
 import jcompiler.compiler.standard.johnnyinstructions.Jump;
 import jcompiler.compiler.standard.johnnyinstructions.Save;
 import jcompiler.compiler.standard.johnnyinstructions.Sub;

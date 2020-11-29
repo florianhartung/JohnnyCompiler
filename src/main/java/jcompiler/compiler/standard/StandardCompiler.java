@@ -40,11 +40,16 @@ public class StandardCompiler extends Compiler {
 
         List<JohnnyInstruction> johnnyInstructions = new ArrayList<>();
         for (Statement statement : statements) {
-            if (statement instanceof IfEnd) {
+            if (statement instanceof IfEnd || statement instanceof WhileEnd) {
                 int found = 0;
                 int elseAddress = -1;
-                IfState.IfConstruct ifConstruct = IfState.endIfStructure();
-                IfState.Operation operation = ifConstruct.getOperation();
+                ConstructStates.IfConstruct ifConstruct = ConstructStates.endIfStructure();
+                ConstructStates.Operation operation = ifConstruct.getOperation();
+
+                if (statement instanceof WhileEnd) {
+                    ((WhileEnd) statement).setStartAddress(ifConstruct.getStartOfWhileLoop());
+                }
+
                 for (int j = johnnyInstructions.size() - 1; ; j--) {
 
                     if (johnnyInstructions.get(j) instanceof Jump && ((Jump) johnnyInstructions.get(j)).getJumpToAdr() == -1) {
@@ -54,7 +59,7 @@ public class StandardCompiler extends Compiler {
                             continue;
                         }
                         if (found == 1) {
-                            if (operation == IfState.Operation.GT || operation == IfState.Operation.LT) {
+                            if (operation == ConstructStates.Operation.GT || operation == ConstructStates.Operation.LT) {
                                 ((Jump) johnnyInstructions.get(j)).setJumpToAdr(j + 2);
                             } else {
                                 ((Jump) johnnyInstructions.get(j)).setJumpToAdr(ifConstruct.hasElse() ? elseAddress : johnnyInstructions.size() + 1);
@@ -63,15 +68,20 @@ public class StandardCompiler extends Compiler {
                         }
                         ((Jump) johnnyInstructions.get(j)).setJumpToAdr(ifConstruct.hasElse() ? elseAddress : johnnyInstructions.size() + 1);
 
-                        if (operation == IfState.Operation.GT || operation == IfState.Operation.LT) {
+                        if (operation == ConstructStates.Operation.GT || operation == ConstructStates.Operation.LT) {
                             found = 1;
-                        } else if (operation == IfState.Operation.GTEQ || operation == IfState.Operation.LTEQ) {
+                        } else if (operation == ConstructStates.Operation.GTEQ || operation == ConstructStates.Operation.LTEQ) {
                             break;
-                        } else if (operation == IfState.Operation.EQ) {
+                        } else if (operation == ConstructStates.Operation.EQ) {
                             found = 1;
                         }
                     }
                 }
+            } else if (statement instanceof WhileStart) {
+                int whileLoopStartAddress = johnnyInstructions.size();
+                johnnyInstructions.addAll(Arrays.asList(statement.compile()));
+                ConstructStates.startWhileLoop(whileLoopStartAddress);
+                continue;
             }
             johnnyInstructions.addAll(Arrays.asList(statement.compile()));
         }
@@ -101,12 +111,16 @@ public class StandardCompiler extends Compiler {
             String id = splitStatement[0];
             String value = splitStatement[1];
             statements.add(new VariableAssignment(id, value));
-        } else if (statement.toLowerCase().startsWith("if")) {
+        } else if (statement.toLowerCase().startsWith("if ")) {
             statements.add(new IfStart(statement.substring(3)));
         } else if (statement.equalsIgnoreCase("endif")) {
             statements.add(new IfEnd());
         } else if (statement.equalsIgnoreCase("else")) {
             statements.add(new IfElse());
+        } else if (statement.toLowerCase().startsWith("while")) {
+            statements.add(new WhileStart(statement.substring(6)));
+        } else if (statement.equalsIgnoreCase("endwhile")) {
+            statements.add(new WhileEnd());
         } else {
             throw new IllegalArgumentException("Syntax Error at " + statement);
         }
@@ -114,8 +128,10 @@ public class StandardCompiler extends Compiler {
 
 
     private void writeMemory(BufferedWriter output) throws MemoryOverflowException, IOException {
-        for (Integer i : Memory.generateMemory()) {
-            output.write(String.valueOf(i));
+        List<Integer> memory = Memory.generateMemory();
+        for (int i = 0; i < 1000; i++) {
+            int value = i < memory.size() ? memory.get(i) : 0;
+            output.write(String.valueOf(value));
             output.write("\r\n");
         }
     }
