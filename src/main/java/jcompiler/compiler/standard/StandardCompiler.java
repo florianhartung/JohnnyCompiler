@@ -21,17 +21,24 @@ public class StandardCompiler extends Compiler {
 
         StringBuilder currentStatement = new StringBuilder();
         int buffer;
+        boolean comment = false;
         while ((buffer = input.read()) != -1) {
             switch ((char) buffer) {
                 case '\n':
                 case '\r':
+                    comment = false;
                     if (currentStatement.length() > 0) {
-                        compileStatement(currentStatement.toString());
+                        compileStatement(currentStatement.toString().replaceAll(" *%", "%"));
                         currentStatement = new StringBuilder();
                     }
                     break;
+                case '%':
+                    comment = true;
+                    break;
                 default:
-                    currentStatement.append((char) buffer);
+                    if(!comment) {
+                        currentStatement.append((char) buffer);
+                    }
             }
         }
         if (currentStatement.length() > 0) {
@@ -100,7 +107,9 @@ public class StandardCompiler extends Compiler {
     }
 
     private void compileStatement(String statement) {
-        if (statement.toLowerCase().startsWith("print")) {
+        if(statement.startsWith("@")) {
+            statements.add(new Raw(statement));
+        } else if (statement.toLowerCase().startsWith("print")) {
             String valueToPrint = statement.substring(6);
 
             statements.add(new Print(valueToPrint));
